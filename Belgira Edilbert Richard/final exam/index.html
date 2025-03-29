@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Map with Locations</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    
+    <!-- Google Fonts & Custom Styles -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background: #f5f5eb; /* Soft earth-toned white */
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 320px;
+            background: #3b6d39; /* Earthy deep green */
+            color: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #d4e9d4; /* Soft pastel green */
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #a5cda5; /* Soft green border */
+            border-radius: 5px;
+            outline: none;
+            background: #e8f5e9; /* Light green tint */
+            color: #2e5532; /* Dark earthy green text */
+            font-size: 16px;
+        }
+
+        button {
+            background: #6f9e6b; /* Soft natural green */
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            color: white;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #557d52; /* Darker earthy green */
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 10px;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #4a8f4a; /* Earthy green */
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        li:hover {
+            background: #3a743a;
+        }
+
+        .remove-btn {
+            background: red;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Map Section */
+        .map-container {
+            flex: 1;
+            height: 100vh;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            border-left: 5px solid #3b6d39;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>Location Finder</h2>
+        <div class="input-group">
+            <input type="text" id="locationInput" placeholder="Enter a location">
+            <button id="addLocationButton">Add</button>
+        </div>
+        <ul id="locationsList"></ul>
+    </div>
+
+    <!-- Map Container -->
+    <div class="map-container">
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+    
+    <script>
+        const locationInput = document.getElementById("locationInput");
+        const addLocationButton = document.getElementById("addLocationButton");
+        const locationsList = document.getElementById("locationsList");
+
+        let locationsArray = [];
+        let map;
+
+        function initializeMap() {
+            map = L.map("map").setView([10, 122], 5);
+            L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "© OpenStreetMap contributors"
+            }).addTo(map);
+        }
+
+        addLocationButton.addEventListener("click", addLocation);
+
+        function addLocation() {
+            const location = locationInput.value.trim();
+            if (location === "") return;
+
+            locationsArray.push(location);
+            locationInput.value = "";
+
+            updateLocationsList();
+            updateMap(location);
+        }
+
+        function updateLocationsList() {
+            locationsList.innerHTML = "";
+            locationsArray.forEach((location, index) => {
+                const li = document.createElement("li");
+                li.textContent = location;
+                li.addEventListener("click", () => updateMap(location));
+
+                const removeBtn = document.createElement("button");
+                removeBtn.textContent = "X";
+                removeBtn.classList.add("remove-btn");
+                removeBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    removeLocation(index);
+                });
+
+                li.appendChild(removeBtn);
+                locationsList.appendChild(li);
+            });
+        }
+
+        function removeLocation(index) {
+            locationsArray.splice(index, 1);
+            updateLocationsList();
+        }
+
+        function updateMap(location) {
+            const locationCoordinates = {
+                "philippines": [13.41, 122.56],
+                "taiwan": [23.6978, 120.9605],
+                "manila": [14.5995, 120.9842],
+                "iloilo": [10.7202, 122.5621],
+                "cebu": [10.3157, 123.8854],
+                "davao": [7.1907, 125.4553],
+                "beijing": [39.9042, 116.4074],
+                "cairo": [30.0444, 31.2357],
+                "delhi": [28.7041, 77.1025],
+                "istanbul": [41.0082, 28.9784],
+                "jakarta": [-6.2088, 106.8456],
+                "lagos": [6.5244, 3.3792],
+                "mexico city": [19.4326, -99.1332],
+                "nairobi": [1.286389, 36.817223],
+                "osaka": [34.6937, 135.5023],
+                "sao paulo": [-23.5505, -46.6333],
+                "seoul": [37.5665, 126.9780],
+                "singapore": [1.3521, 103.8198]
+            };
+            if (locationCoordinates[location.toLowerCase()]) {
+                map.setView(locationCoordinates[location.toLowerCase()], 6);
+                L.marker(locationCoordinates[location.toLowerCase()]).addTo(map).bindPopup(location);
+            } else {
+                alert("Location not found or coordinates not available.");
+            }
+        }
+
+        window.onload = initializeMap;
+    </script>
+</body>
+</html>
